@@ -1,0 +1,59 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+    <!-- Indicators -->
+    <ol class="carousel-indicators">
+        <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+        <li data-target="#carousel-example-generic" data-slide-to="1"></li>
+        <li data-target="#carousel-example-generic" data-slide-to="2"></li>
+    </ol>
+
+    <!-- Wrapper for slides -->
+    <div class="carousel-inner" role="listbox">
+        <div class="item active">
+            <img src="~/Content/Images/slide_1.png" alt="We Learn">
+            <div class="carousel-caption">
+                <span>We Learn!</span>
+            </div>
+        </div>
+        <div class="item">
+            <img src="~/Content/Images/slide_2.jpg" alt="Never Stop">
+            <div class="carousel-caption">
+                <span>Never Stop</span>
+            </div>
+        </div>
+        <div class="item">
+            <img src="~/Content/Images/slide_3.jpg" alt="We Win!">
+            <div class="carousel-caption">
+                <span>We Win!</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+    </a>
+    <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+        <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h2>Cursos</h2>
+        <p>
+            Usa esta opcion para ver todos los cursos y ofertas de esta institucion.
+        </p>
+        <p>@Html.ActionLink("Ver Mas", "Index", "Courses", null, new { @class="btn btn-primary" })</p>
+    </div>
+    <div class="col-md-6">
+        <h2>Estudiantes</h2>
+        <p>Ve todos los estudiantes registrados en esta institucion.</p>
+        <p>@Html.ActionLink("Todos los Estudiantes", "Index", "Students", null, new { @class = "btn btn-info" })</p>
+    </div>
+</div>
