@@ -1,0 +1,201 @@
+﻿@model SchoolManagement.Models.Enrollment
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@*El script se puede escribir en otro archivo y referenciarse, pero para fines practicos se dejara aqui...*@
+@*JQuery y Ajax*@
+<script>
+    //Jquery y Ajax
+    //Jquery siempre empieza sus bloques asi: $(function () {});
+    $(function () {
+        //Asi no repetimos mas codigo
+        function LoadEnrollments(cid) {
+            $.ajax({
+                url: '@Url.Action("_enrollmentPartial", "Enrollments")',  //Una forma de llamar a una de las secciones de la pagina, me gusta mas esta
+                //url: '@Url.Action("_enrollmentPartial", "Enrollments")',  //Una forma de llamar a una de las secciones de la pagina
+                dataType: 'html',  //Html porque se va a recibir un contenido html
+                contentType: 'application/html; charset=utf-8',
+                type: 'GET',
+                data: {
+                    //valor en controlador: valor en este script
+                    courseid: cid
+                },
+                success: function (data) {
+                    //Con jquery se llama al control 'data', se le agrega animaciones y se le llena con el valor data
+                    $('#data').fadeOut().html(data).fadeIn();
+                }
+            });
+        }
+
+        //Esto se va a ejecutar apenas inicie la pagina
+        var cid = $('#CourseID').val();
+        LoadEnrollments(cid);
+
+        //Funcion para un change event
+        //Jquery
+        $('#CourseID').change(function () {
+            var cid = $('#CourseID').val();
+            LoadEnrollments(cid);
+            $("#failed").fadeOut('fast');
+            $("#success").fadeOut('fast');
+        });
+
+        //Funcion para el autocomplete
+        //Jquery
+        //Student_FirstName es el EditorFor de FirstName
+        $("#Student_FirstName").autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: "/Enrollments/GetStudents",  //Otra forma de llamar a una de las secciones de la pagina
+                    dataType: "json",  //Json porque se va a recibir un json
+                    type: "POST",
+                    data: {
+                        term: request.term
+                    },
+                    success: function (data) {
+                        console.log(data);
+                        response($.map(data, function (item) {
+                            return { label: item.Name, Value: item.Name, id: item.Id };
+                        }));
+                    }
+                });
+            },
+            minLength: 2,
+            select: function (event, query) {
+                //log("Selected: " + ui.item.value + " aka " + ui.item.id);
+                console.log(query);
+                $("#StudentID").val(query.item.id);
+            }
+        });
+    });
+
+    //Se desencadena cuando la ejecucion de AddStudent sea exitosa
+    //JavaScript
+    function Added(res) {
+        if (res.IsSuccess) {
+            //Jquery
+            $(function () {
+                $("#failed").fadeOut('fast');
+                $("#success").fadeIn('fast');
+                //$("#success").append(res.Message); <-- Asi se toma el texto que regresa el json desde el controlador
+
+                //Asi recargamos el listado, ya que por el acomodo que se tiene aqui, Added esta fuera del scope del segmento de Jquery que tenemos arriba
+                //y por lo mismo no puede llamar exitosamente a LoadEnrollments
+                var cid = $('#CourseID').val();
+                $.ajax({
+                    url: '@Url.Action("_enrollmentPartial", "Enrollments")',  //Una forma de llamar a una de las secciones de la pagina, me gusta mas esta
+                    //url: '@Url.Action("_enrollmentPartial", "Enrollments")',  //Una forma de llamar a una de las secciones de la pagina
+                    dataType: 'html',  //Html porque se va a recibir un contenido html
+                    contentType: 'application/html; charset=utf-8',
+                    type: 'GET',
+                    data: {
+                        //valor en controlador: valor en este script
+                        courseid: cid
+                    },
+                    success: function (data) {
+                        //Con jquery se llama al control 'data', se le agrega animaciones y se le llena con el valor data
+                        $('#data').fadeOut().html(data).fadeIn();
+                    }
+                });
+            })
+        }
+        else {
+            Failed(res);
+        }
+    }
+
+    //Se desencadena cuando la ejecucion de AddStudent tuviera errores
+    //JavaScript
+    function Failed(res) {
+        //Jquery
+        $(function () {
+            $("#failed").fadeIn('fast');
+            $("#success").fadeOut('fast');
+            //$("#failed").append(res.Message); <-- Asi se toma el texto que regresa el json desde el controlador
+        })
+    }
+</script>
+
+<h2>Create</h2>
+
+@*Como se quiere que la pagina no se recargue constantemente (la pagina no debara recargarse cada que se de de alta un enrolamiento),
+se necesita una Ajax Form, y por lo mismo esto cambia de Html a Ajax*@
+@*@using (Html.BeginForm())*@ 
+@using (Ajax.BeginForm("AddStudent", "Enrollments", new AjaxOptions { 
+    HttpMethod = "POST",
+    OnSuccess = "Added",
+    OnFailure = "Failure"
+}))
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal">
+        <h4>Enrollment</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @*<div class="form-group">
+            @Html.LabelFor(model => model.Grade, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Grade, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Grade, "", new { @class = "text-danger" })
+            </div>
+        </div>*@
+
+        <div id="failed" class="alert alert-danger" style="display: none;">
+            Ocurrio un error al agregar al Estudiante a este Curso
+        </div>
+        <div id="success" class="alert alert-success" style="display: none;">
+            Estudiante agregado exitosamente
+        </div>
+
+        <div class="form-group">
+            <label for="CourseID" class="control-label col-md-2">Curso</label>
+            @*@Html.LabelFor(model => model.CourseID, "CourseID", htmlAttributes: new { @class = "control-label col-md-2" })*@
+            <div class="col-md-10">
+                @Html.DropDownList("CourseID", null, htmlAttributes: new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.CourseID, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="StudentID" class="control-label col-md-2">Nombre del Estudiante</label>
+            @*@Html.LabelFor(model => model.Student.FirstName, "FirstName", htmlAttributes: new { @class = "control-label col-md-2" })*@
+            <div class="col-md-10">
+                @*@Html.DropDownList("StudentID", null, htmlAttributes: new { @class = "form-control" })*@
+                @*El nombre del EditorFor toma el nombre completo de la entidad (Student), un guion bajo y el nombre del campo
+            En este caso seria: Student_FirstName*@
+                @Html.EditorFor(model => model.Student.FirstName, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.HiddenFor(model => model.StudentID)
+                @Html.ValidationMessageFor(model => model.StudentID, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        @*<div class="form-group">
+            @Html.LabelFor(model => model.LecturerId, "LecturerId", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownList("LecturerId", null, htmlAttributes: new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.LecturerId, "", new { @class = "text-danger" })
+            </div>
+        </div>*@
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Enrolar" class="btn btn-success btn-block" />
+            </div>
+        </div>
+    </div>
+}
+
+<hr/>
+
+@*Partial View para mostrar los enrolamientos existentes y los nuevos sin que la pagina recargue, y sin volver al index de Enrollment*@
+<div id="data">
+    @*@Html.Action("_enrollmentPartial", "Enrollments")*@
+</div>
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
