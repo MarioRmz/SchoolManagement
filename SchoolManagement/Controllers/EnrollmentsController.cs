@@ -25,9 +25,13 @@ namespace SchoolManagement.Controllers
         //Metodo para la partial view _enrollmentPartial
         public PartialViewResult _enrollmentPartial(int? courseid)
         {
-            var enrollments = db.Enrollments.Where(q => q.CourseID == courseid)
-                .Include(e => e.Course)
+            IQueryable <Enrollment> enrollments = null;
+            if (courseid != null) enrollments = db.Enrollments.Where(q => q.CourseID == courseid);
+            else enrollments = db.Enrollments;
+
+            enrollments.Include(e => e.Course)
                 .Include(e => e.Student);
+
             return PartialView(enrollments.ToList());
         }
 
@@ -154,12 +158,26 @@ namespace SchoolManagement.Controllers
         // POST: Enrollments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> DeleteConfirmed(int id)
-        {
-            Enrollment enrollment = await db.Enrollments.FindAsync(id);
-            db.Enrollments.Remove(enrollment);
-            await db.SaveChangesAsync();
-            return RedirectToAction("Index");
+        //public async Task<ActionResult> DeleteConfirmed(int id)
+        //{
+        //    Enrollment enrollment = await db.Enrollments.FindAsync(id);
+        //    db.Enrollments.Remove(enrollment);
+        //    await db.SaveChangesAsync();
+        //    return RedirectToAction("Index");
+        //}
+        public async Task<JsonResult> DeleteConfirmed(int id)
+        {            
+            try
+            {
+                Enrollment enrollment = await db.Enrollments.FindAsync(id);
+                db.Enrollments.Remove(enrollment);
+                await db.SaveChangesAsync();
+                return Json(new { IsSuccess = true, Message = "Curso eliminado exitosamente" }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new { IsSuccess = false, Message = "El curso no pudo ser eliminado" }, JsonRequestBehavior.AllowGet);
+            }
         }
 
         [HttpPost]
